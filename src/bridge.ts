@@ -521,12 +521,15 @@ export function stampBlueprint(
     const result = gateResults[i];
     if (!claim || !result) continue;
 
-    const field = DOMAIN_TO_FIELD[claim.domain];
-    if (!field) continue;
+    const field = String(DOMAIN_TO_FIELD[claim.domain]);
+    if (!field || !(field in blueprint)) continue;
 
     const incoming = verdictToGrade(result);
-    const current  = blueprint[field] as BlueprintGrade;
-    (blueprint as any)[field] = mergeGrade(current, incoming);
+    const gradeFields: Record<string, keyof StampedBlueprint> = { market_scores: 'market_scores', problem_statement: 'problem_statement', moat_hypothesis: 'moat_hypothesis', mvp_nodes: 'mvp_nodes', monetisation_event: 'monetisation_event', target_user: 'target_user' };
+    const safeField = gradeFields[field];
+    if (!safeField) continue;
+    const current = (blueprint[safeField] as BlueprintGrade) ?? 'ASSUMED';
+    (blueprint as any)[safeField] = mergeGrade(current, incoming);
 
     if (result.stagnated && result.stagnationTags) {
       blueprint.stagnation_meta.push({ field, tags: result.stagnationTags });
@@ -576,8 +579,8 @@ function mergeGrade(existing: BlueprintGrade, incoming: BlueprintGrade): Bluepri
   const rank: Record<BlueprintGrade, number> = {
     HALLUCINATION: 4,
     DEBATABLE:     3,
-    ASSUMED:       2,
-    VERIFIED:      1,
+    VERIFIED:      2,
+    ASSUMED:       1,
   };
   return rank[incoming] >= rank[existing] ? incoming : existing;
 }
