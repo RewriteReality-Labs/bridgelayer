@@ -268,9 +268,9 @@ describe('triggerGate', () => {
     jest.resetModules();
   });
 
-  it.skip('BUG-03: routes HIGH stakes claim to TOKEN_BUDGET.HIGH (2048 tokens)', async () => {
+  it('BUG-03: routes HIGH stakes claim to TOKEN_BUDGET.HIGH (2048 tokens)', async () => {
     const mockRunPipeline = jest.fn().mockResolvedValue(makePipelineResult());
-    jest.doMock('../src/index.js', () => ({ runPipeline: mockRunPipeline }));
+    jest.doMock('../src/index.js', () => ({ runPipeline: mockRunPipeline }), { virtual: true });
 
     const claim = makeClaim({ stakes_level: 'HIGH' });
     await triggerGate(claim);
@@ -281,9 +281,9 @@ describe('triggerGate', () => {
     );
   });
 
-  it.skip('BUG-03: routes MED stakes claim to TOKEN_BUDGET.MED (1024 tokens)', async () => {
+  it('BUG-03: routes MED stakes claim to TOKEN_BUDGET.MED (1024 tokens)', async () => {
     const mockRunPipeline = jest.fn().mockResolvedValue(makePipelineResult());
-    jest.doMock('../src/index.js', () => ({ runPipeline: mockRunPipeline }));
+    jest.doMock('../src/index.js', () => ({ runPipeline: mockRunPipeline }), { virtual: true });
 
     const claim = makeClaim({ stakes_level: 'MED' });
     await triggerGate(claim);
@@ -294,9 +294,9 @@ describe('triggerGate', () => {
     );
   });
 
-  it.skip('BUG-03: routes LOW stakes claim to TOKEN_BUDGET.LOW (512 tokens)', async () => {
+  it('BUG-03: routes LOW stakes claim to TOKEN_BUDGET.LOW (512 tokens)', async () => {
     const mockRunPipeline = jest.fn().mockResolvedValue(makePipelineResult());
-    jest.doMock('../src/index.js', () => ({ runPipeline: mockRunPipeline }));
+    jest.doMock('../src/index.js', () => ({ runPipeline: mockRunPipeline }), { virtual: true });
 
     const claim = makeClaim({ stakes_level: 'LOW' });
     await triggerGate(claim);
@@ -307,10 +307,10 @@ describe('triggerGate', () => {
     );
   });
 
-  it.skip('pipeline failure rule: exception returns WARN, never PASS', async () => {
+  it('pipeline failure rule: exception returns WARN, never PASS', async () => {
     jest.doMock('../src/index.js', () => ({
       runPipeline: jest.fn().mockRejectedValue(new Error('GBSE timeout')),
-    }));
+    }), { virtual: true });
 
     const claim = makeClaim();
     const result = await triggerGate(claim);
