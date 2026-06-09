@@ -506,15 +506,16 @@ not just aspirationally.
 ## Part V — Current Implementation Status
 
 ```
-ATTA state:            TRACKED / GBSE AUDITED / IMPLEMENTATION_CLEAR / PLACEHOLDERS_RESOLVED
-Governance chain:      8 passes / exit condition met / zero [HALLUCINATION] findings
-Diff state:            COMMITTED — this document is the specification
+ATTA state:            PR_2_AFFIRMED / GOVERNANCE_BASELINE_RESTORED / M_03_BLOCKED_PENDING_EVIDENCE
+Governance chain:      8 passes retained for specification document; repo governance restored through PR #2
+Diff state:            COMMITTED — governance baseline restored on main at 04bf300
+Validation state:      43 passing / 0 skipped / 0 failing after PR #2 merge
 Test state:            43 passing / 0 skipped / 0 failing
 Type check:            CLEAN (npx tsc --noEmit)
-Branch:                main (direct — pre-governance; M-00, M-01, M-02 classified ACCEPTED)
-PR state:              No PR — all future work requires branch + PR
-Next action:           git add . && git commit -m "feat: SPECIFICATION.md AFFIRMED — all placeholders resolved" && git push
-Next milestone:        M-03 — GBSE src/index.js prerequisite fix (unskips 4 triggerGate tests)
+Branch:                main verified at 04bf300; current alignment work must continue on scoped branch + PR
+PR state:              PR #1 AFFIRMED; PR #2 AFFIRMED; future work requires branch + PR
+Next action:           Resolve stale restored-snapshot language, then keep M-03 blocked until GBSE src/index.js evidence is supplied
+Next milestone:        M-03 — GBSE src/index.js prerequisite fix remains BLOCKED pending return-field verification
 ATTA master claim:     GBSE_BUILDGATE_BRIDGELAYER_MASTER_CLAIM_001 — PROPOSED_NOT_AFFIRMED
 ```
 
@@ -612,4 +613,4 @@ Those remain `ASSUMED` or `BLOCKED` in the evidence inventory above.
 
 **finalVerdict: IMPLEMENTATION_CLEAR**
 **ATTA state: AFFIRMED for this specification document**
-**Repo AFFIRMED: CONDITIONAL — pending push, PR, and roadmap update**
+**Repo state: PR_2_AFFIRMED — governance baseline restored on main at  4bf300; M-03 remains BLOCKED pending GBSE index evidence**
