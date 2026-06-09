@@ -92,24 +92,27 @@ Completion score advances only after: code merged on branch, tests passing, docs
 - Cleared local and remote branch refs
 
 **GBSE verdict:** `AFFIRMED_FOR_PR_002`
-**Next dependency:** M-03 remains `BLOCKED` until GBSE `src/index.js` return metadata is verified.
+**Next dependency:** M-03 evidence is satisfied by GBSE main `12df582`; BridgeLayer M-03 closure remains pending this PR merge and post-merge verification.
 
 ---
 ---
 
 ### M-03 — GBSE src/index.js Prerequisite Fix
-**Status:** `BLOCKED`
-**Blocked by:** `GBSE_INDEX_PREREQUISITE_CLAIM_001`
-**Required action:** Confirm `runPipeline()` in GBSE `src/index.js` exposes `stagnated`, `stagnationTags`, `iterationCount` in return object
-**Deliverable:** Replace `src/index.js` stub with real GBSE adapter
-**Unlocks:** 4 skipped tests unskip → 43/43 passing
+**Status:** `EVIDENCE_AFFIRMED / PR_PENDING`
+**Blocked by:** `CLEARED — GBSE_INDEX_PREREQUISITE_CLAIM_001 satisfied`
+**Required action:** Completed — GBSE `runPipeline()` return diagnostics now expose `diagnostics.iterationCount`, `diagnostics.stagnated`, and `diagnostics.stagnationTags`.
+**Evidence:** GBSE main commit `12df582` — `fix: expose runPipeline stagnation diagnostics contract`
+**BridgeLayer baseline:** main `4826a5e`; branch `docs/m03-gbse-contract-evidence`; baseline validation passed with `43/43` tests, type check clean, lint `0` errors / `3` known warnings.
+**Deliverable:** Upstream GBSE contract evidence recorded in BridgeLayer governance docs; no BridgeLayer runtime change in this PR.
+**Unlocks:** M-04, M-05, M-06, and M-07 planning may proceed only after this BridgeLayer PR is merged and post-merge verified.
 
 **Validation gates:**
-```powershell
-Select-String -Path "src/index.js" -Pattern "stagnated|stagnationTags|iterationCount" | Select-Object -First 10
-npm test   # target: 43 passed · 0 skipped · 0 failed
-```
+- GBSE evidence: `Select-String -Path "src/index.js" -Pattern "iterationCount|stagnated|stagnationTags" -Context 2,2`
+- GBSE tests: `npm test` confirmed `44/44` passing
+- BridgeLayer baseline: `npm test -- --runInBand` confirmed `43/43` passing
 
+**ATTA closure:** `ACKNOWLEDGED / TRACKED / TIMESTAMPED / GBSE_AUDITED / EVIDENCE_AFFIRMED`
+**GBSE verdict:** `CONDITIONAL_PASS — main affirmation pending this BridgeLayer PR merge`
 ---
 
 ### M-04 — BuildGate Integration Wiring

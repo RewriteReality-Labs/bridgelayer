@@ -514,8 +514,8 @@ Test state:            43 passing / 0 skipped / 0 failing
 Type check:            CLEAN (npx tsc --noEmit)
 Branch:                main verified at 04bf300; current alignment work must continue on scoped branch + PR
 PR state:              PR #1 AFFIRMED; PR #2 AFFIRMED; future work requires branch + PR
-Next action:           Resolve stale restored-snapshot language, then keep M-03 blocked until GBSE src/index.js evidence is supplied
-Next milestone:        M-03 — GBSE src/index.js prerequisite fix remains BLOCKED pending return-field verification
+Next action:           Record M-03 evidence closure and proceed to M-04 only after this BridgeLayer PR is merged and post-merge verified
+Next milestone:        M-04 — BuildGate Integration Wiring, dependent on M-03 evidence closure PR affirmation
 ATTA master claim:     GBSE_BUILDGATE_BRIDGELAYER_MASTER_CLAIM_001 — PROPOSED_NOT_AFFIRMED
 ```
 
@@ -559,8 +559,8 @@ CONFIRMED (evidence cited and checkable):
   - 8-pass audit chain produced zero [HALLUCINATION] findings in final pass
     Evidence: audit chain documents 1-8, this session 2026-06-09
 
-  - Stagnation logic confirmed in GBSE src/index.js
-    Evidence: GBSE CHANGELOG v1.1.0 — "Stagnation detection implemented"
+  - Stagnation logic and BridgeLayer-facing return contract confirmed in GBSE src/index.js
+    Evidence: GBSE main commit 12df582; runPipeline() diagnostics exposes iterationCount, stagnated, and stagnationTags; GBSE tests passed 44/44
 
   - Security and conduct contact: rewriterealitylabs@gmail.com
     Artifact: confirmed by ATTA (Attaullah Fayyaz) 2026-06-09
@@ -572,11 +572,7 @@ CONFIRMED (evidence cited and checkable):
 
 ASSUMED (asserted without independent verification):
 
-  - src/index.js runPipeline() return object exposes stagnated + stagnationTags
-    as named fields (confirmed as logic exists; field names in return object
-    not directly verified — robots.txt blocked raw file fetch)
-    Required to confirm: clone GBSE repo locally, run:
-    Select-String -Path "src/index.js" -Pattern "stagnated|return {"
+  - No remaining assumption for GBSE runPipeline stagnation return fields after GBSE main 12df582.
 
 BLOCKED (cannot be verified by this system):
 
@@ -613,4 +609,4 @@ Those remain `ASSUMED` or `BLOCKED` in the evidence inventory above.
 
 **finalVerdict: IMPLEMENTATION_CLEAR**
 **ATTA state: AFFIRMED for this specification document**
-**Repo state: PR_2_AFFIRMED — governance baseline restored on main at  4bf300; M-03 remains BLOCKED pending GBSE index evidence**
+**Repo state: PR_3_AFFIRMED — governance state aligned on main at 4826a5e; M-03 evidence satisfied by GBSE main 12df582 pending this BridgeLayer PR merge**
