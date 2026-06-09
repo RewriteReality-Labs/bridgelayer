@@ -75,6 +75,26 @@ Completion score advances only after: code merged on branch, tests passing, docs
 
 **GBSE verdict:** Targeting 92–94 → 95+ on governance dimensions
 
+### M-GOV-002 — Restore Governance Baseline After PR #1
+
+**Status:** `AFFIRMED`
+**Branch:** `docs/restore-governance-baseline`
+**Commit:** `04bf300`
+**PR:** `#2`
+**Date:** 2026-06-09
+
+**Delivered:**
+- Restored `ROADMAP.md`
+- Restored `docs/SPECIFICATION.md`
+- Updated `docs/README.md`
+- Updated `docs/getting-started.md`
+- Confirmed post-merge validation on `main`
+- Cleared local and remote branch refs
+
+**GBSE verdict:** `AFFIRMED_FOR_PR_002`
+**Next dependency:** M-03 remains `BLOCKED` until GBSE `src/index.js` return metadata is verified.
+
+---
 ---
 
 ### M-03 — GBSE src/index.js Prerequisite Fix
