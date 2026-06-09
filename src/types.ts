@@ -1,24 +1,24 @@
 /**
  * bridge/types.ts
- * ─────────────────────────────────────────────────────────────
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  * Canonical type definitions for the BridgeLayer system.
- * Three systems share these types — do not duplicate or fork.
+ * Three systems share these types â€” do not duplicate or fork.
  *
- *   GBSE       — verification pipeline (produces PipelineResult)
- *   BuildGate  — go/no-go decision gate (consumes GateSignal)
- *   ATTA       — proof governance (produces AttaRecord)
+ *   GBSE       â€” verification pipeline (produces PipelineResult)
+ *   BuildGate  â€” go/no-go decision gate (consumes GateSignal)
+ *   ATTA       â€” proof governance (produces AttaRecord)
  *
  * Master claim: GBSE_BUILDGATE_BRIDGELAYER_MASTER_CLAIM_001
  * GBSE audit:   GBSE_BRIDGELAYER_REPO_CLAIM_001 (CONDITIONAL_PASS 83/100)
  * RewriteReality Labs | 2026-06-07
- * ─────────────────────────────────────────────────────────────
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  */
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // CLAIM TYPES
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-/** Six active claim domains — each routes to a Blueprint field via DOMAIN_TO_FIELD. */
+/** Six active claim domains â€” each routes to a Blueprint field via DOMAIN_TO_FIELD. */
 export type ClaimDomain =
   | 'market_sizing'
   | 'pain_validation'
@@ -40,7 +40,7 @@ export type DecisionRelevance = 'BLOCKING' | 'CONTEXTUAL';
  * Both are accepted by normaliseClaim(). `claim` will be removed in a future release.
  */
 export interface Claim {
-  /** Unique claim identifier — used as trace anchor in GateDecisionLog. */
+  /** Unique claim identifier â€” used as trace anchor in GateDecisionLog. */
   claimId: string;
 
   /**
@@ -66,18 +66,18 @@ export interface Claim {
    */
   blocking: boolean;
 
-  /** BuildGate phase this claim originated from (1–6). */
+  /** BuildGate phase this claim originated from (1â€“6). */
   source_phase?: number;
 
   /** Raw text slice from the phase input that produced this claim. */
   source_text?: string;
 }
 
-// ─────────────────────────────────────────────────────────────
-// RAW BLUEPRINT — emitted by BuildGate Phase 6
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// RAW BLUEPRINT â€” emitted by BuildGate Phase 6
 // BridgeLayer reads this. BridgeLayer never writes it.
 // Distinct from StampedBlueprint which BridgeLayer produces.
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export interface BlueprintNode {
   name: string;
@@ -88,7 +88,7 @@ export interface BlueprintNode {
 }
 
 /**
- * RawBlueprint — the structured artifact emitted by BuildGate Phase 6.
+ * RawBlueprint â€” the structured artifact emitted by BuildGate Phase 6.
  *
  * BridgeLayer.extractClaims() consumes this.
  * BridgeLayer.stampBlueprint() produces a StampedBlueprint from it.
@@ -118,7 +118,7 @@ export interface RawBlueprint {
     node_3: BlueprintNode;
   };
   roadmap: {
-    weeks:            any[];
+    weeks:            unknown[];
     team:             string[];
     total_cost_usd:   number;
     revenue_trigger:  string;
@@ -130,9 +130,9 @@ export interface RawBlueprint {
   build_target: 'lovable' | 'bolt' | '8080';
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // GBSE PIPELINE TYPES
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * Raw output from GBSE runPipeline().
@@ -142,29 +142,29 @@ export interface RawBlueprint {
  * before filtering. Raw .filter() on a string returns undefined.
  *
  * PLANNED: stagnated, stagnationTags, and iterationCount require the
- * src/index.js prerequisite fix — expose all three in the runPipeline()
+ * src/index.js prerequisite fix â€” expose all three in the runPipeline()
  * return object. These fields are NOT confirmed in the live GBSE return
  * contract until that fix is verified.
  */
 export interface PipelineResult {
   /** Unprocessed verdict from GBSE reconstructor. */
   finalVerdict: 'PASS' | 'CONDITIONAL_PASS' | 'BLOCK';
-  /** Raw string from the [CORRECTION LOG] section — must be normalised before use. */
+  /** Raw string from the [CORRECTION LOG] section â€” must be normalised before use. */
   correctionLog: string | string[];
   diagnostics: {
     /**
-     * True if Solver→Auditor loop stagnated.
-     * [PLANNED — requires src/index.js prerequisite fix, not confirmed in live return]
+     * True if Solverâ†’Auditor loop stagnated.
+     * [PLANNED â€” requires src/index.js prerequisite fix, not confirmed in live return]
      */
     stagnated: boolean;
     /**
      * Tag string produced when stagnation occurs.
-     * [PLANNED — requires src/index.js prerequisite fix, not confirmed in live return]
+     * [PLANNED â€” requires src/index.js prerequisite fix, not confirmed in live return]
      */
     stagnationTags: string;
     /**
-     * Number of Solver→Auditor iterations completed.
-     * [PLANNED — requires src/index.js prerequisite fix, not confirmed in live return]
+     * Number of Solverâ†’Auditor iterations completed.
+     * [PLANNED â€” requires src/index.js prerequisite fix, not confirmed in live return]
      */
     iterationCount?: number;
   };
@@ -183,16 +183,16 @@ export interface GateResult {
   debatableLines: string[];
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // BUILDGATE SIGNAL TYPES
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * The structured signal BridgeLayer emits to BuildGate.
  *
- *   ALLOW        — claim verified, gate may proceed
- *   BLOCK        — hallucination confirmed, gate must hard-stop
- *   HUMAN_REVIEW — uncertain result or unaffirmed ATTA record, route to human
+ *   ALLOW        â€” claim verified, gate may proceed
+ *   BLOCK        â€” hallucination confirmed, gate must hard-stop
+ *   HUMAN_REVIEW â€” uncertain result or unaffirmed ATTA record, route to human
  *
  * IMPORTANT: ALLOW here is a BuildGate operational gate signal.
  * It is NOT the same as GBSE PASS, which is a verification result.
@@ -235,9 +235,9 @@ export interface GateSignal {
   verifiedFields: string[];
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // ATTA FRAMEWORK TYPES
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * ATTA proof status for a claim or claim class.
@@ -264,9 +264,9 @@ export interface AttaRecord {
   note?: string;
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // DECISION LOG TYPES
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * A traceable log entry for every governed gate decision BridgeLayer emits.
@@ -278,7 +278,7 @@ export interface AttaRecord {
 export interface GateDecisionLog {
   logId:              string;
   timestamp:          string;
-  /** Required — trace anchor linking claim to pipeline run. */
+  /** Required â€” trace anchor linking claim to pipeline run. */
   pipelineRunId:      string;
   claim:              string;
   claimDomain:        ClaimDomain;
@@ -295,9 +295,9 @@ export interface GateDecisionLog {
   debatableLines:     string[];
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // BLUEPRINT TYPES
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export type BlueprintGrade = 'VERIFIED' | 'DEBATABLE' | 'HALLUCINATION' | 'ASSUMED';
 
@@ -308,7 +308,7 @@ export type BuildVerdict =
   | 'DO_NOT_BUILD';
 
 /**
- * StampedBlueprint — produced by BridgeLayer.stampBlueprint().
+ * StampedBlueprint â€” produced by BridgeLayer.stampBlueprint().
  *
  * Distinct from RawBlueprint (emitted by BuildGate Phase 6).
  * sourceBlueprintId links this back to the RawBlueprint that was stamped.
@@ -316,7 +316,7 @@ export type BuildVerdict =
 export interface StampedBlueprint {
   /** Unique ID for this stamped result. */
   blueprintId:        string;
-  /** ID of the RawBlueprint this was stamped from. Links BuildGate → BridgeLayer. */
+  /** ID of the RawBlueprint this was stamped from. Links BuildGate â†’ BridgeLayer. */
   sourceBlueprintId:  string;
   market_scores:      BlueprintGrade;
   problem_statement:  BlueprintGrade;
@@ -329,7 +329,7 @@ export interface StampedBlueprint {
   verifiedFields:     string[];
   /** Fields that reached HALLUCINATION grade. */
   blockedFields:      string[];
-  /** Fields still ASSUMED or DEBATABLE — require further evidence. */
+  /** Fields still ASSUMED or DEBATABLE â€” require further evidence. */
   evidenceRequired:   string[];
   stagnation_meta:    { field: string; tags: string }[];
 }

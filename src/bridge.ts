@@ -1,30 +1,30 @@
 /**
  * bridge.ts
- * ─────────────────────────────────────────────────────────────
- * BridgeLayer — connects three systems with distinct jobs.
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+ * BridgeLayer â€” connects three systems with distinct jobs.
  *
- *   GBSE       — runs verification pipeline on any claim.
+ *   GBSE       â€” runs verification pipeline on any claim.
  *                Produces: PipelineResult (verdict + correctionLog + diagnostics)
  *
- *   BuildGate  — makes go/no-go decisions on consequential actions.
+ *   BuildGate  â€” makes go/no-go decisions on consequential actions.
  *                Consumes: GateSignal (ALLOW / BLOCK / HUMAN_REVIEW)
  *
- *   ATTA       — governs whether a claim class has earned its status
+ *   ATTA       â€” governs whether a claim class has earned its status
  *                through the proof sequence.
  *                Produces: AttaRecord (AFFIRMED / PENDING / PROPOSED / REJECTED)
  *
  * Three functions. Nothing more.
  *
- *   1. extractSignal()     GBSE output → GateSignal for BuildGate
- *   2. checkAttaRecord()   ATTA record status → governs ALLOW on high-stakes claims
- *   3. logDecision()       Every gate decision → traceable GateDecisionLog entry
+ *   1. extractSignal()     GBSE output â†’ GateSignal for BuildGate
+ *   2. checkAttaRecord()   ATTA record status â†’ governs ALLOW on high-stakes claims
+ *   3. logDecision()       Every gate decision â†’ traceable GateDecisionLog entry
  *
  * All five confirmed bug fixes (BUG-01 through BUG-05) are applied.
- * Pipeline failure is always WARN — silence is never verification.
+ * Pipeline failure is always WARN â€” silence is never verification.
  *
  * Master claim: GBSE_BUILDGATE_BRIDGELAYER_MASTER_CLAIM_001
  * RewriteReality Labs | ATTA | 2026-06-07
- * ─────────────────────────────────────────────────────────────
+ * â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
  */
 
 import type {
@@ -59,19 +59,19 @@ import {
   normaliseClaim,
 } from './utils';
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // DEPENDENCY INJECTION INTERFACES
 //
 // BridgeLayer does not hardwire to GBSE or ATTA implementations.
-// Callers inject both at construction time — enables testing without
+// Callers inject both at construction time â€” enables testing without
 // live pipeline or ATTA store.
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * GBSE pipeline executor interface.
  * Implement this to connect to the real GBSE runPipeline() in src/index.js.
  * The real implementation must expose stagnated + stagnationTags in its return
- * (src/index.js prerequisite fix — see KNOWLEDGE_BASE.md §3.2).
+ * (src/index.js prerequisite fix â€” see KNOWLEDGE_BASE.md Â§3.2).
  */
 export interface GbsePipeline {
   runPipeline(claim: string, options: { maxTokensSolver: number }): Promise<PipelineResult>;
@@ -94,9 +94,9 @@ export interface DecisionLogSink {
   write(entry: GateDecisionLog): Promise<void>;
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // BRIDGELAYER CLASS
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 export class BridgeLayer {
   private gbse: GbsePipeline;
@@ -109,27 +109,27 @@ export class BridgeLayer {
     this.log  = log;
   }
 
-  // ─────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // FUNCTION 1: extractSignal
   //
   // Takes a single Claim and runs the GBSE verification pipeline on it.
   // Translates the raw pipeline output into a GateSignal that BuildGate
   // can act on directly.
   //
-  //   GBSE PASS / CONDITIONAL_PASS  →  maps to ALLOW (subject to ATTA check)
-  //   GBSE BLOCK                    →  maps to BLOCK
-  //   Pipeline exception            →  maps to HUMAN_REVIEW (never ALLOW)
-  //   Stagnated loop                →  maps to HUMAN_REVIEW
-  //   Hallucination lines present   →  maps to BLOCK
-  //   Debatable lines present       →  maps to HUMAN_REVIEW
+  //   GBSE PASS / CONDITIONAL_PASS  â†’  maps to ALLOW (subject to ATTA check)
+  //   GBSE BLOCK                    â†’  maps to BLOCK
+  //   Pipeline exception            â†’  maps to HUMAN_REVIEW (never ALLOW)
+  //   Stagnated loop                â†’  maps to HUMAN_REVIEW
+  //   Hallucination lines present   â†’  maps to BLOCK
+  //   Debatable lines present       â†’  maps to HUMAN_REVIEW
   //
   // Token budget is routed by claim.stakes_level (BUG-03 fix).
   // correctionLog is normalised before filtering (BUG-01 fix).
-  // Pipeline failure returns HUMAN_REVIEW — silence is never ALLOW. (pipeline failure rule)
-  // ─────────────────────────────────────────────────────────────
+  // Pipeline failure returns HUMAN_REVIEW â€” silence is never ALLOW. (pipeline failure rule)
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   async extractSignal(claim: Claim): Promise<GateSignal> {
-    // BUG-03 fix: token budget routed by stakes level — never hardcoded.
+    // BUG-03 fix: token budget routed by stakes level â€” never hardcoded.
     const tokenBudget = TOKEN_BUDGET[claim.stakes_level] ?? TOKEN_BUDGET.MED;
 
     let pipelineResult: PipelineResult;
@@ -139,12 +139,12 @@ export class BridgeLayer {
         maxTokensSolver: tokenBudget,
       });
     } catch (err) {
-      // Pipeline failure rule: exception → HUMAN_REVIEW, never ALLOW.
+      // Pipeline failure rule: exception â†’ HUMAN_REVIEW, never ALLOW.
       // Silence is not verification.
       const signal: GateSignal = {
         decision:            'HUMAN_REVIEW',
         pipelineVerdict:     'BLOCK',
-        reason:              `Pipeline threw during execution: ${String(err)}. Routed to human review — silence is not verification.`,
+        reason:              `Pipeline threw during execution: ${String(err)}. Routed to human review â€” silence is not verification.`,
         reasonCodes:         ['PIPELINE_EXCEPTION'],
         attaGoverned:        false,
         claim:               claim.statement ?? claim.claim ?? '',
@@ -178,7 +178,7 @@ export class BridgeLayer {
       debatableLines:     debatables,
     };
 
-    // Translate GBSE verdict → BuildGate decision
+    // Translate GBSE verdict â†’ BuildGate decision
     let decision: GateDecision;
     let reason: string;
 
@@ -188,10 +188,10 @@ export class BridgeLayer {
     } else if (gateResult.verdict === 'WARN' || stagnated) {
       decision = 'HUMAN_REVIEW';
       reason   = stagnated
-        ? `GBSE Solver→Auditor loop stagnated. Tags: ${stagnationTags}. Cannot auto-resolve.`
+        ? `GBSE Solverâ†’Auditor loop stagnated. Tags: ${stagnationTags}. Cannot auto-resolve.`
         : `GBSE returned WARN with debatable findings: ${debatables.join(' | ')}`;
     } else {
-      // PASS — still subject to ATTA check below
+      // PASS â€” still subject to ATTA check below
       decision = 'ALLOW';
       reason   = 'GBSE pipeline returned PASS with no hallucination or debatable findings.';
     }
@@ -215,7 +215,7 @@ export class BridgeLayer {
     return signal;
   }
 
-  // ─────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // FUNCTION 2: checkAttaRecord
   //
   // Before BuildGate fires ALLOW on a high-stakes BLOCKING claim,
@@ -225,14 +225,14 @@ export class BridgeLayer {
   // Rules:
   //   - LOW stakes claims skip the ATTA check.
   //   - CONTEXTUAL claims skip the ATTA check.
-  //   - AFFIRMED status → signal passes through unchanged.
-  //   - PROPOSED / PENDING / PROPOSED_NOT_AFFIRMED → override ALLOW to HUMAN_REVIEW.
-  //   - REJECTED → override any signal to BLOCK.
-  //   - No record found → override ALLOW to HUMAN_REVIEW (unverified claim class).
+  //   - AFFIRMED status â†’ signal passes through unchanged.
+  //   - PROPOSED / PENDING / PROPOSED_NOT_AFFIRMED â†’ override ALLOW to HUMAN_REVIEW.
+  //   - REJECTED â†’ override any signal to BLOCK.
+  //   - No record found â†’ override ALLOW to HUMAN_REVIEW (unverified claim class).
   //
   // This function does not re-run the pipeline. It only governs ALLOW decisions.
   // BLOCK decisions from extractSignal() are not overridden.
-  // ─────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   async checkAttaRecord(
     claim: Claim,
@@ -242,10 +242,10 @@ export class BridgeLayer {
     const requiresCheck = !canSkipAttaCheck(claim);
 
     if (!requiresCheck) {
-      return incomingSignal; // LOW stakes or CONTEXTUAL — pass through
+      return incomingSignal; // LOW stakes or CONTEXTUAL â€” pass through
     }
 
-    // Only govern ALLOW decisions — BLOCK remains BLOCK
+    // Only govern ALLOW decisions â€” BLOCK remains BLOCK
     if (incomingSignal.decision === 'BLOCK') {
       return incomingSignal;
     }
@@ -255,7 +255,7 @@ export class BridgeLayer {
     let governed = incomingSignal;
 
     if (!record) {
-      // No ATTA record exists for this claim class — cannot auto-allow
+      // No ATTA record exists for this claim class â€” cannot auto-allow
       governed = {
         ...incomingSignal,
         decision:     'HUMAN_REVIEW',
@@ -275,7 +275,7 @@ export class BridgeLayer {
         reason:       `ATTA record ${record.id} status is REJECTED. Gate blocked regardless of pipeline verdict.`,
       };
     } else if (ATTA_BLOCKING_STATUSES.has(record.status)) {
-      // PROPOSED or PENDING — route to human review
+      // PROPOSED or PENDING â€” route to human review
       governed = {
         ...incomingSignal,
         decision:     'HUMAN_REVIEW',
@@ -285,7 +285,7 @@ export class BridgeLayer {
         reason:       `ATTA record ${record.id} is ${record.status}. ALLOW requires AFFIRMED status before this claim class can auto-pass.`,
       };
     } else {
-      // AFFIRMED — signal passes through with ATTA provenance attached
+      // AFFIRMED â€” signal passes through with ATTA provenance attached
       governed = {
         ...incomingSignal,
         attaGoverned: true,
@@ -303,10 +303,10 @@ export class BridgeLayer {
     return governed;
   }
 
-  // ─────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // FUNCTION 3: logDecision
   //
-  // Every gate decision — ALLOW, BLOCK, HUMAN_REVIEW — gets a log entry.
+  // Every gate decision â€” ALLOW, BLOCK, HUMAN_REVIEW â€” gets a log entry.
   // No decision leaves BridgeLayer without a traceable record containing:
   //   - which pipeline run produced it (pipelineRunId if available)
   //   - which ATTA record governed it (if checked)
@@ -314,10 +314,10 @@ export class BridgeLayer {
   //   - the claim text
   //   - hallucination and debatable lines from the correctionLog
   //
-  // Private — called internally by extractSignal() and checkAttaRecord().
+  // Private â€” called internally by extractSignal() and checkAttaRecord().
   // Exposed as a standalone method for external callers who need to log
   // decisions made outside the normal flow (e.g. human overrides).
-  // ─────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   async logDecision(
     claim: Claim,
@@ -341,13 +341,13 @@ export class BridgeLayer {
     await this.log.write(entry);
   }
 
-  // ─────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // FULL BRIDGE CYCLE
   //
-  // Convenience method: runs extractSignal → checkAttaRecord → returns
+  // Convenience method: runs extractSignal â†’ checkAttaRecord â†’ returns
   // the final governed GateSignal for BuildGate to act on.
   // The decision log is written at each stage.
-  // ─────────────────────────────────────────────────────────────
+  // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   async process(claim: Claim): Promise<GateSignal> {
     const signal  = await this.extractSignal(claim);
@@ -356,7 +356,7 @@ export class BridgeLayer {
   }
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // LEGACY THREE-FUNCTION API
 //
 // Standalone exports matching the original bridge.js function signatures
@@ -364,7 +364,7 @@ export class BridgeLayer {
 // ATTA and log implementations for callers that haven't migrated.
 //
 // For full ATTA governance, use BridgeLayer class directly.
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -415,7 +415,7 @@ Output valid JSON array only. No preamble. No backticks.`;
       ).map(c => ({ ...c, source_phase: phaseNumber }));
     }
   } catch {
-    // Parse or API failure — fall through to BUG-04 guard below.
+    // Parse or API failure â€” fall through to BUG-04 guard below.
   }
 
   // BUG-04 fix: substantial input with zero claims = silent pass risk.
@@ -439,27 +439,27 @@ Output valid JSON array only. No preamble. No backticks.`;
  *
  * BUG-01 fix: normalises correctionLog before filtering.
  * BUG-03 fix: token budget routed by claim.stakes_level.
- * Pipeline failure rule: exception → WARN, never PASS.
+ * Pipeline failure rule: exception â†’ WARN, never PASS.
  *
- * NOTE: requires the src/index.js prerequisite fix — runPipeline() must
+ * NOTE: requires the src/index.js prerequisite fix â€” runPipeline() must
  * expose stagnated and stagnationTags in its return object.
  */
 export async function triggerGate(claim: Claim): Promise<GateResult> {
-  // BUG-03 fix: route by stakes level — never hardcode.
+  // BUG-03 fix: route by stakes level â€” never hardcode.
   const tokenBudget = TOKEN_BUDGET[claim.stakes_level] ?? TOKEN_BUDGET.MED;
 
   let result: PipelineResult;
 
   try {
     // runPipeline lives in src/index.js (the GBSE pipeline entry point).
-    // It is NOT re-exported from bridge/index.ts — this dynamic import
+    // It is NOT re-exported from bridge/index.ts â€” this dynamic import
     // targets the GBSE file directly. Requires the src/index.js prerequisite
     // fix: runPipeline must expose stagnated + stagnationTags in its return.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const gbse: any = await import(/* webpackIgnore: true */ './index.js');
     result = await gbse.runPipeline(claim.statement ?? claim.claim ?? '', { maxTokensSolver: tokenBudget });
   } catch (err) {
-    // Pipeline failure rule: exception → WARN. Silence is not verification.
+    // Pipeline failure rule: exception â†’ WARN. Silence is not verification.
     return {
       verdict:           'WARN',
       confidence:        'ASSUMED',
@@ -499,7 +499,7 @@ export function stampBlueprint(
   claims:      Claim[],
   gateResults: GateResult[]
 ): StampedBlueprint {
-  // BUG-02 fix: initialise all fields to ASSUMED — never leave undefined.
+  // BUG-02 fix: initialise all fields to ASSUMED â€” never leave undefined.
   const blueprint: StampedBlueprint = {
     blueprintId:        `bp_${Date.now()}`,
     sourceBlueprintId:  '',
@@ -529,28 +529,47 @@ export function stampBlueprint(
     const safeField = gradeFields[field];
     if (!safeField) continue;
     const current = (blueprint[safeField] as BlueprintGrade) ?? 'ASSUMED';
-    (blueprint as any)[safeField] = mergeGrade(current, incoming);
+    switch (safeField) {
+      case 'market_scores':
+        blueprint.market_scores = mergeGrade(current, incoming);
+        break;
+      case 'problem_statement':
+        blueprint.problem_statement = mergeGrade(current, incoming);
+        break;
+      case 'moat_hypothesis':
+        blueprint.moat_hypothesis = mergeGrade(current, incoming);
+        break;
+      case 'mvp_nodes':
+        blueprint.mvp_nodes = mergeGrade(current, incoming);
+        break;
+      case 'monetisation_event':
+        blueprint.monetisation_event = mergeGrade(current, incoming);
+        break;
+      case 'target_user':
+        blueprint.target_user = mergeGrade(current, incoming);
+        break;
+    }
 
     if (result.stagnated && result.stagnationTags) {
       blueprint.stagnation_meta.push({ field, tags: result.stagnationTags });
     }
   }
 
-  // BUG-05 fix applied in deriveVerdict — DEBATABLE on blocking field →
+  // BUG-05 fix applied in deriveVerdict â€” DEBATABLE on blocking field â†’
   // NEEDS_VALIDATION not BUILD_WITH_RISKS.
   blueprint.final_verdict = deriveVerdict(blueprint);
   return blueprint;
 }
 
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 // PRIVATE HELPERS
-// ─────────────────────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 /**
  * Translates a GBSE finalVerdict + correction log findings into the
  * three-value GBSE gate verdict: BLOCK / WARN / PASS.
  *
- * Stagnated loops are always WARN — they cannot be auto-resolved.
+ * Stagnated loops are always WARN â€” they cannot be auto-resolved.
  */
 function deriveGbseVerdict(
   finalVerdict: PipelineResult['finalVerdict'],
@@ -573,7 +592,7 @@ function verdictToGrade(result: GateResult): BlueprintGrade {
 /**
  * Merge rule: the worst grade wins.
  * HALLUCINATION > DEBATABLE > ASSUMED > VERIFIED
- * ASSUMED is a placeholder — any real result overwrites it.
+ * ASSUMED is a placeholder â€” any real result overwrites it.
  */
 function mergeGrade(existing: BlueprintGrade, incoming: BlueprintGrade): BlueprintGrade {
   const rank: Record<BlueprintGrade, number> = {
@@ -587,12 +606,12 @@ function mergeGrade(existing: BlueprintGrade, incoming: BlueprintGrade): Bluepri
 
 /**
  * Derives the final build verdict from a stamped Blueprint.
- * Strict priority order — do not reorder these checks.
+ * Strict priority order â€” do not reorder these checks.
  *
- * 1. Any HALLUCINATION?                     → DO_NOT_BUILD
- * 2. DEBATABLE on a BLOCKING_FIELD?          → NEEDS_VALIDATION   (BUG-05)
- * 3. Any DEBATABLE on non-blocking field?    → BUILD_WITH_RISKS
- * 4. All remaining fields VERIFIED/ASSUMED?  → BUILD_CLEAR
+ * 1. Any HALLUCINATION?                     â†’ DO_NOT_BUILD
+ * 2. DEBATABLE on a BLOCKING_FIELD?          â†’ NEEDS_VALIDATION   (BUG-05)
+ * 3. Any DEBATABLE on non-blocking field?    â†’ BUILD_WITH_RISKS
+ * 4. All remaining fields VERIFIED/ASSUMED?  â†’ BUILD_CLEAR
  */
 function deriveVerdict(bp: StampedBlueprint): BuildVerdict {
   const fields = Object.keys(DOMAIN_TO_FIELD) as (keyof typeof DOMAIN_TO_FIELD)[];
